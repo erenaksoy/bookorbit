@@ -93,7 +93,10 @@ describe('MetadataFetchPipeline', () => {
     // The media helpers run the real registry over whatever providers a test registers, with each
     // provider's real media and edition traits.
     const live = () =>
-      new ProviderRegistry(((registry.all() ?? []) as MetadataProvider[]).map((provider) => ({ ...PROVIDER_TRAITS[provider.key], ...provider })));
+      new ProviderRegistry(
+        ((registry.all() ?? []) as MetadataProvider[]).map((provider) => ({ ...PROVIDER_TRAITS[provider.key], ...provider })),
+        { providers: () => [], find: () => undefined } as never,
+      );
     registry = {
       all: vi.fn(),
       keysForMedia: vi.fn((keys: MetadataProviderKey[], media: CoverMedia) => live().keysForMedia(keys, media)),

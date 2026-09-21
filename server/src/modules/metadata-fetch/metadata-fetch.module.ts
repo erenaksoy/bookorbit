@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { MetadataPreferencesModule } from '../metadata-preferences/metadata-preferences.module';
+import { MetadataProviderPluginModule } from '../metadata-provider-plugin/metadata-provider-plugin.module';
 import { METADATA_PROVIDERS } from './constants';
 import { MetadataFetchController } from './metadata-fetch.controller';
 import { MetadataFetchPipeline } from './metadata-fetch-pipeline';
@@ -45,7 +46,7 @@ const PROVIDER_CLASSES = [
 ];
 
 @Module({
-  imports: [MetadataPreferencesModule],
+  imports: [MetadataPreferencesModule, MetadataProviderPluginModule],
   providers: [
     ...PROVIDER_CLASSES,
     {

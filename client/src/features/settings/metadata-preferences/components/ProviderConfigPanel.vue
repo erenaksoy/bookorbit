@@ -8,7 +8,7 @@ import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { formatList } from '@/i18n/formatters'
 import { stripBearerPrefix } from '../lib/provider-token'
-import { PROVIDER_GROUP_ORDER } from '../lib/provider-rows'
+import { PROVIDER_GROUP_ORDER, withoutPluginProviders } from '../lib/provider-rows'
 import type { ProviderChipView, ProviderDraftEntry, ProviderGroupId, ProviderRowDef } from '../lib/provider-rows'
 import { useProviderRows } from '../composables/useProviderRows'
 import ProviderRow from './ProviderRow.vue'
@@ -269,7 +269,7 @@ function discard() {
 
 function save() {
   if (!draft.value) return
-  emit('save', draft.value)
+  emit('save', withoutPluginProviders(draft.value))
 }
 
 function setFilter(value: ProviderFilter) {

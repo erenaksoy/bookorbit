@@ -206,7 +206,11 @@ function buildHarness(options: HarnessOptions = {}): Harness {
     { getConfig: () => Promise.resolve(providerConfig) } as unknown as ProviderConfigService,
     throttleTracker,
   );
-  const service = new MetadataFetchService(new ProviderRegistry([provider]), new ProviderThrottleTracker(), {} as MetadataFetchRepository);
+  const service = new MetadataFetchService(
+    new ProviderRegistry([provider], { providers: () => [], find: () => undefined } as never),
+    new ProviderThrottleTracker(),
+    {} as MetadataFetchRepository,
+  );
 
   return { provider, service, throttleTracker, requestUrls, probedVolumeIds, detailVolumeIds, detailIssueIds, abortedPaths };
 }

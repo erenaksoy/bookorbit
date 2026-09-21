@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getProviderColor, providerBadgeStyle, providerChipStyle, PROVIDER_SHORT_LABELS } from '../provider-colors'
+import { getProviderColor, providerBadgeStyle, providerChipStyle, PROVIDER_SHORT_LABELS, registerPluginProviderLabels } from '../provider-colors'
 
 const RANOBEDB_COLOR = '#a78cff'
 
@@ -102,5 +102,19 @@ describe('providerChipStyle', () => {
 
   it('falls back to the default colour for an unknown provider', () => {
     expect(providerChipStyle('unknown')['--provider-color']).toBe(getProviderColor('unknown'))
+  })
+})
+
+describe('registerPluginProviderLabels', () => {
+  it('makes an installed plugin readable wherever provider labels are shown', () => {
+    registerPluginProviderLabels([{ key: 'plugin:acme-books', label: 'Acme Books' }])
+
+    expect(PROVIDER_SHORT_LABELS['plugin:acme-books']).toBe('Acme Books')
+  })
+
+  it('ignores a label offered for something that is not a plugin, so a built-in name cannot be replaced', () => {
+    registerPluginProviderLabels([{ key: 'google', label: 'Hijacked' }])
+
+    expect(PROVIDER_SHORT_LABELS.google).toBe('Google')
   })
 })
