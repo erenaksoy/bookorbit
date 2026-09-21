@@ -218,7 +218,7 @@ function buildHarness(options: HarnessOptions = {}): Harness {
     throttleTracker,
   );
   const service = new MetadataFetchService(
-    new ProviderRegistry([provider]),
+    new ProviderRegistry([provider], { providers: () => [], find: () => undefined } as never),
     new ProviderThrottleTracker(),
     {} as MetadataFetchRepository,
     uncachedExecutor(),

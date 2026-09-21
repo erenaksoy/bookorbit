@@ -1,10 +1,11 @@
-import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
-import { METADATA_CACHE_REQUEST_POLICIES, MetadataProviderKey } from '@bookorbit/types';
-import type { MetadataCacheRequestPolicy } from '@bookorbit/types';
+import { METADATA_CACHE_REQUEST_POLICIES } from '@bookorbit/types';
+import type { MetadataCacheRequestPolicy, MetadataProviderKey } from '@bookorbit/types';
+import { IsMetadataProviderKey } from '../../../common/utils/metadata-provider-key.utils';
 
 export class LookupMetadataDto {
-  @IsEnum(MetadataProviderKey)
+  @IsMetadataProviderKey()
   provider: MetadataProviderKey;
 
   @IsString()

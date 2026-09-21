@@ -107,6 +107,11 @@ export enum AuditAction {
   RequestIndexerPluginInstall = "request_indexer.plugin.install",
   RequestIndexerPluginRemove = "request_indexer.plugin.remove",
 
+  MetadataProviderPluginInspect = "metadata_provider_plugin.inspect",
+  MetadataProviderPluginInstall = "metadata_provider_plugin.install",
+  MetadataProviderPluginEnable = "metadata_provider_plugin.enable",
+  MetadataProviderPluginRemove = "metadata_provider_plugin.remove",
+
   AuthorUpdate = "author.update",
   AuthorDelete = "author.delete",
   AuthorMerge = "author.merge",
@@ -167,6 +172,7 @@ export enum AuditResource {
   BookRequest = "book_request",
   DownloadClient = "download_client",
   RequestIndexer = "request_indexer",
+  MetadataProviderPlugin = "metadata_provider_plugin",
   Author = "author",
   AppSettings = "app_settings",
   Genre = "genre",
@@ -243,7 +249,7 @@ export const AUDIT_CATEGORY_PREFIXES: Record<Exclude<AuditCategory, "other">, re
   requests: ["book_request.", "download_client.", "request_indexer."],
   collections: ["collection.", "smart_scope."],
   devices: ["kobo.", "email."],
-  settings: ["app_settings.", "entity_manager.", "author.", "maintenance."],
+  settings: ["app_settings.", "entity_manager.", "author.", "maintenance.", "metadata_provider_plugin."],
 };
 
 export function getAuditCategory(action: string): AuditCategory {
@@ -273,7 +279,12 @@ export const AUDIT_SECURITY_GROUPS = {
     AuditAction.UserUnlock,
     AuditAction.OidcUserProvisioned,
   ],
-  passwords: [AuditAction.AuthPasswordChange, AuditAction.AuthPasswordResetRequest, AuditAction.AuthPasswordReset, AuditAction.AuthPasswordAdminReset],
+  passwords: [
+    AuditAction.AuthPasswordChange,
+    AuditAction.AuthPasswordResetRequest,
+    AuditAction.AuthPasswordReset,
+    AuditAction.AuthPasswordAdminReset,
+  ],
   permissions: [AuditAction.UserPermissionSet, AuditAction.UserSuperuserEnable, AuditAction.UserSuperuserDisable],
   access: [
     AuditAction.UserContentFiltersSet,

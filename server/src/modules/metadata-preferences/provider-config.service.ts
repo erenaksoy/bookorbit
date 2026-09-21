@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import { eq, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { MetadataProviderKey, ProviderConfigurations, ProviderConnectionTestResult, ProviderStatus } from '@bookorbit/types';
+import type { PluginProviderKey } from '@bookorbit/types';
 
 import { stripBearerPrefix, toBearerAuthorization } from '../../common/utils/bearer-token.utils';
 import { amazonRequestHeaders, isAmazonBotChallenge } from '../../common/utils/amazon-http.utils';
@@ -9,10 +10,12 @@ import { sanitizeLogValue } from '../../common/utils/log-sanitize.utils';
 import { amazonOrigin, normalizeAmazonDomain, normalizeAudibleDomain } from '../../common/utils/metadata-provider-hosts.utils';
 import { DB } from '../../db';
 import * as schema from '../../db/schema';
+import { MetadataProviderPluginRegistry } from '../metadata-provider-plugin/metadata-provider-plugin.registry';
 
 type Db = NodePgDatabase<typeof schema>;
+type BuiltInProviderConfigKey = Exclude<keyof ProviderConfigurations, PluginProviderKey>;
 type ProviderConfigPatch = {
-  [K in keyof ProviderConfigurations]?: Partial<ProviderConfigurations[K]>;
+  [K in BuiltInProviderConfigKey]?: Partial<ProviderConfigurations[K]>;
 };
 
 const PROVIDER_CONFIG_KEY = 'metadata_provider_config';
@@ -175,7 +178,10 @@ const PROVIDER_ENABLE_RULES = {
 export class ProviderConfigService {
   private readonly logger = new Logger(ProviderConfigService.name);
 
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly plugins: MetadataProviderPluginRegistry,
+  ) {}
 
   private createDefaultConfig(): ProviderConfigurations {
     return {
@@ -346,8 +352,13 @@ export class ProviderConfigService {
     const row = await this.db.query.appSettings.findFirst({
       where: eq(schema.appSettings.key, PROVIDER_CONFIG_KEY),
     });
-    if (!row) return defaults;
-    return this.normalizeConfig(this.parsePersistedConfig(row.value, defaults, 'get', startedAt));
+    const config = row ? this.normalizeConfig(this.parsePersistedConfig(row.value, defaults, 'get', startedAt)) : defaults;
+    return this.withPluginConfig(config);
+  }
+
+  /** Plugin providers only carry an on/off switch, and it lives with the plugin manager rather than in this document. */
+  private withPluginConfig(config: ProviderConfigurations): ProviderConfigurations {
+    return { ...config, ...this.plugins.enabledConfig() };
   }
 
   async getLinkSettings() {
@@ -373,13 +384,13 @@ export class ProviderConfigService {
         .insert(schema.appSettings)
         .values({ key: PROVIDER_CONFIG_KEY, value })
         .onConflictDoUpdate({ target: schema.appSettings.key, set: { value } });
-      return next;
+      return this.withPluginConfig(next);
     });
   }
 
   async getProviderStatuses(config?: ProviderConfigurations): Promise<ProviderStatus[]> {
     const cfg = config ?? (await this.getConfig());
-    return [
+    const builtIn: ProviderStatus[] = [
       {
         key: MetadataProviderKey.GOOGLE,
         label: PROVIDER_LABELS[MetadataProviderKey.GOOGLE],
@@ -473,6 +484,14 @@ export class ProviderConfigService {
         hint: !this.getEnableRule('aladin')?.canEnable(cfg) ? this.getEnableRule('aladin')?.setupHint : undefined,
       },
     ];
+    const plugins: ProviderStatus[] = this.plugins.describe().map((plugin) => ({
+      key: plugin.key,
+      label: plugin.label,
+      enabled: plugin.enabled,
+      configured: true,
+      ...(plugin.description ? { hint: plugin.description } : {}),
+    }));
+    return [...builtIn, ...plugins];
   }
 
   async testProvider(key: MetadataProviderKey, patch?: ProviderConfigPatch): Promise<ProviderConnectionTestResult> {

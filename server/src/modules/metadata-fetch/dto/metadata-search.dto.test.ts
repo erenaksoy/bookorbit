@@ -107,7 +107,7 @@ describe('MetadataSearchDto', () => {
         expect.objectContaining({
           property: 'providers',
           constraints: expect.objectContaining({
-            isEnum: expect.stringContaining('providers'),
+            isMetadataProviderKey: expect.stringContaining('providers'),
           }),
         }),
       ]),

@@ -41,12 +41,14 @@ function createDb() {
 describe('ProviderConfigService', () => {
   let db: ReturnType<typeof createDb>;
   let service: ProviderConfigService;
+  let plugins: { enabledConfig: ReturnType<typeof vi.fn>; describe: ReturnType<typeof vi.fn> };
   let warnSpy: ReturnType<typeof vi.spyOn>;
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     db = createDb();
-    service = new ProviderConfigService(db as never);
+    plugins = { enabledConfig: vi.fn().mockReturnValue({}), describe: vi.fn().mockReturnValue([]) };
+    service = new ProviderConfigService(db as never, plugins as never);
     warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
@@ -55,6 +57,59 @@ describe('ProviderConfigService', () => {
   afterEach(() => {
     warnSpy.mockRestore();
     vi.unstubAllGlobals();
+  });
+
+  describe('plugin providers', () => {
+    const pluginInfo = {
+      type: 'acme-books',
+      key: 'plugin:acme-books',
+      label: 'Acme Books',
+      description: 'A sample source',
+      mediaKinds: ['ebook'],
+      enabled: true,
+    };
+
+    it('folds each installed plugin switch into the config so the fetch pipeline sees it', async () => {
+      db.query.appSettings.findFirst.mockResolvedValue(undefined);
+      plugins.enabledConfig.mockReturnValue({ 'plugin:acme-books': { enabled: true }, 'plugin:other': { enabled: false } });
+
+      const config = await service.getConfig();
+
+      expect(config['plugin:acme-books']).toEqual({ enabled: true });
+      expect(config['plugin:other']).toEqual({ enabled: false });
+      expect(config.google).toEqual({ enabled: false, apiKey: '' });
+    });
+
+    it('lists plugins after the built-in providers', async () => {
+      db.query.appSettings.findFirst.mockResolvedValue(undefined);
+      plugins.describe.mockReturnValue([pluginInfo]);
+
+      const statuses = await service.getProviderStatuses();
+
+      expect(statuses.at(-1)).toEqual({
+        key: 'plugin:acme-books',
+        label: 'Acme Books',
+        enabled: true,
+        configured: true,
+        hint: 'A sample source',
+      });
+      expect(statuses.filter((status) => status.key.startsWith('plugin:'))).toHaveLength(1);
+    });
+
+    it('never writes plugin switches into the persisted provider document', async () => {
+      db.query.appSettings.findFirst.mockResolvedValue(undefined);
+      plugins.enabledConfig.mockReturnValue({ 'plugin:acme-books': { enabled: true } });
+
+      const result = await service.updateConfig({ goodreads: { enabled: false } });
+
+      const persisted = JSON.parse(db.__txInsertChain.values.mock.calls[0]![0].value);
+      expect(persisted).not.toHaveProperty(['plugin:acme-books']);
+      expect(result['plugin:acme-books']).toEqual({ enabled: true });
+    });
+
+    it('does not offer a connection test for a plugin', async () => {
+      await expect(service.testProvider('plugin:acme-books', {})).rejects.toThrow(/not supported/);
+    });
   });
 
   it('returns defaults when no stored config exists', async () => {

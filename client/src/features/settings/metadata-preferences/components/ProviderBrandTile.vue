@@ -7,9 +7,11 @@ const props = defineProps<{
   providerKey: string
   label: string
   enabled: boolean
+  /** A plugin's own logo; built-in sources use the icon shipped with the app. */
+  iconUrl?: string
 }>()
 
-const iconPath = computed(() => providerIconPathSafe(props.providerKey))
+const iconPath = computed(() => props.iconUrl ?? providerIconPathSafe(props.providerKey))
 
 /**
  * Sources without a shipped icon fall back to their capitals: AudNexus reads AN,

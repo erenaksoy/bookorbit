@@ -3,7 +3,6 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
-  IsEnum,
   IsIn,
   IsInt,
   Min,
@@ -17,8 +16,9 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-import { CONCRETE_BOOK_MEDIA_KINDS, METADATA_CACHE_REQUEST_POLICIES, MetadataProviderKey } from '@bookorbit/types';
-import type { ConcreteBookMediaKind, MetadataCacheRequestPolicy } from '@bookorbit/types';
+import { CONCRETE_BOOK_MEDIA_KINDS, METADATA_CACHE_REQUEST_POLICIES } from '@bookorbit/types';
+import type { ConcreteBookMediaKind, MetadataCacheRequestPolicy, MetadataProviderKey } from '@bookorbit/types';
+import { IsMetadataProviderKey } from '../../../common/utils/metadata-provider-key.utils';
 
 @ValidatorConstraint({ name: 'atLeastOneSearchTerm', async: false })
 class AtLeastOneSearchTermConstraint implements ValidatorConstraintInterface {
@@ -121,7 +121,7 @@ export class MetadataSearchDto {
 
     return undefined;
   })
-  @IsEnum(MetadataProviderKey, { each: true })
+  @IsMetadataProviderKey({ each: true })
   providers?: MetadataProviderKey[];
 
   /**

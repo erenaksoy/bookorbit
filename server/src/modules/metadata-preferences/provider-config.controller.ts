@@ -1,14 +1,14 @@
-import { MetadataProviderKey, Permission } from '@bookorbit/types';
+import { Permission } from '@bookorbit/types';
+import type { MetadataProviderKey } from '@bookorbit/types';
 import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
 
+import { isMetadataProviderKey } from '../../common/utils/metadata-provider-key.utils';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 import { UpdateProviderConfigDto } from './dto/update-provider-config.dto';
 import { ProviderConfigService } from './provider-config.service';
 
-const KNOWN_PROVIDER_KEYS = new Set<MetadataProviderKey>(Object.values(MetadataProviderKey));
-
 function parseProviderKey(value: string): MetadataProviderKey {
-  if (KNOWN_PROVIDER_KEYS.has(value as MetadataProviderKey)) return value as MetadataProviderKey;
+  if (isMetadataProviderKey(value)) return value;
   throw new BadRequestException(`Unknown provider key: ${value}`);
 }
 
