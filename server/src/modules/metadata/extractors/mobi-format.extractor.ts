@@ -12,7 +12,8 @@ export class MobiFormatExtractor implements FormatExtractor {
     return {
       title: mobi.title,
       description: mobi.description,
-      isbn13: mobi.isbn,
+      isbn10: mobi.contentIsbn?.isbn10 ?? null,
+      isbn13: mobi.isbn ?? mobi.contentIsbn?.isbn13 ?? null,
       publisher: mobi.publisher,
       publishedDate,
       publishedYear,

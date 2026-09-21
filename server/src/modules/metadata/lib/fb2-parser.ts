@@ -5,6 +5,7 @@ import { parseSeriesIndex } from '@bookorbit/types';
 import { BOOKORBIT_NS_PREFIX } from '../../../common/bookorbit-ns';
 import { decodeFb2Document } from '../../../common/utils/fb2-encoding.utils';
 import { parsePublishedDateKey } from '../../../common/utils/published-date.utils';
+import { scanFb2TextForIsbn } from './fb2-isbn-scan';
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -123,6 +124,8 @@ export interface Fb2Metadata {
   tags: string[];
   publisher: string | null;
   isbn13: string | null;
+  /** An ISBN read from the book text, set only when `publish-info` has none. */
+  contentIsbn: { isbn10: string | null; isbn13: string | null };
   custom: Partial<Record<Fb2CustomInfoField, string>>;
 }
 
@@ -215,6 +218,8 @@ export async function parseFb2File(absolutePath: string): Promise<Fb2Metadata | 
       if (annotStr) annotationDescription = stripHtml(annotStr) || null;
     }
 
+    const publishedIsbn = text(publishInfo?.['isbn']);
+
     const keywords = text(titleInfo['keywords']);
     const tags = keywords
       ? keywords
@@ -235,7 +240,8 @@ export async function parseFb2File(absolutePath: string): Promise<Fb2Metadata | 
       genres,
       tags,
       publisher: text(publishInfo?.['publisher']),
-      isbn13: text(publishInfo?.['isbn']),
+      isbn13: publishedIsbn,
+      contentIsbn: publishedIsbn ? { isbn10: null, isbn13: null } : scanFb2TextForIsbn(xml),
       custom: parseCustomInfo(description),
     };
   } catch {
