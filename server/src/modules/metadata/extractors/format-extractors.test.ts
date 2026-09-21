@@ -75,6 +75,7 @@ import { extractAudioMetadata } from './audio.extractor';
 import { AudioFormatExtractor } from './audio-format.extractor';
 import { ComicFormatExtractor } from './comic-format.extractor';
 import { EpubFormatExtractor } from './epub-format.extractor';
+import { ISBN_10, ISBN_13, ISBN_13_OTHER } from '../../../common/test-utils/isbn-fixtures';
 import { Fb2FormatExtractor } from './fb2-format.extractor';
 import { MobiFormatExtractor } from './mobi-format.extractor';
 import { OpfFormatExtractor } from './opf-format.extractor';
@@ -344,6 +345,7 @@ describe('metadata format extractors', () => {
       tags: [],
       publisher: null,
       isbn13: null,
+      contentIsbn: { isbn10: null, isbn13: null },
       custom: {},
     });
     mockExtractFb2Cover.mockRejectedValue(new Error('missing binary'));
@@ -371,6 +373,7 @@ describe('metadata format extractors', () => {
       tags: ['favourite'],
       publisher: 'Painted Quill Press',
       isbn13: '9781729419007',
+      contentIsbn: { isbn10: null, isbn13: null },
       custom: { subtitle: 'A Tale', rating: '4.5', pageCount: '412', goodreadsId: '12345', isbn10: '1729419001' },
     });
     mockExtractFb2Cover.mockResolvedValue(Buffer.from('cover'));
@@ -406,6 +409,7 @@ describe('metadata format extractors', () => {
       tags: [],
       publisher: null,
       isbn13: null,
+      contentIsbn: { isbn10: null, isbn13: null },
       custom: { rating: 'not-a-number', pageCount: '' },
     });
     mockExtractFb2Cover.mockResolvedValue(null);
@@ -483,6 +487,44 @@ describe('metadata format extractors', () => {
     expect(mockExtractCbrMetadata).toHaveBeenCalledWith('/books/mislabelled.cbz');
     expect(mockExtractCbzMetadata).not.toHaveBeenCalled();
     expect(result).toEqual(expect.objectContaining({ title: 'Mislabelled Issue' }));
+  });
+
+  it('fb2 extractor uses an ISBN read from the book text when publish-info has none', async () => {
+    mockParseFb2File.mockResolvedValue({
+      title: 'T',
+      description: null,
+      publishedDate: null,
+      publishedYear: null,
+      language: null,
+      seriesName: null,
+      seriesIndex: null,
+      authors: [],
+      genres: [],
+      tags: [],
+      publisher: null,
+      isbn13: null,
+      contentIsbn: { isbn10: ISBN_10, isbn13: ISBN_13 },
+      custom: {},
+    });
+    mockExtractFb2Cover.mockResolvedValue(null);
+
+    const result = await new Fb2FormatExtractor().extract('/books/test.fb2');
+
+    expect(result).toEqual(expect.objectContaining({ isbn13: ISBN_13, isbn10: ISBN_10 }));
+  });
+
+  it('mobi extractor prefers the EXTH ISBN and otherwise uses the one read from the text', async () => {
+    const base = { title: 'T', description: null, publisher: null, publishedDate: null, language: null, authors: [], tags: [] };
+    mockExtractMobiCover.mockResolvedValue(null);
+
+    mockParseMobiFile.mockResolvedValue({ ...base, isbn: ISBN_13_OTHER, contentIsbn: { isbn10: null, isbn13: ISBN_13 } } as never);
+    await expect(new MobiFormatExtractor().extract('/books/a.mobi')).resolves.toEqual(expect.objectContaining({ isbn13: ISBN_13_OTHER }));
+
+    mockParseMobiFile.mockResolvedValue({ ...base, isbn: null, contentIsbn: { isbn10: null, isbn13: ISBN_13 } } as never);
+    await expect(new MobiFormatExtractor().extract('/books/a.azw3')).resolves.toEqual(expect.objectContaining({ isbn13: ISBN_13 }));
+
+    mockParseMobiFile.mockResolvedValue({ ...base, isbn: null, contentIsbn: { isbn10: ISBN_10, isbn13: null } } as never);
+    await expect(new MobiFormatExtractor().extract('/books/a.azw')).resolves.toEqual(expect.objectContaining({ isbn10: ISBN_10, isbn13: null }));
   });
 
   it('mobi extractor parses year from publishedDate and tolerates missing cover', async () => {

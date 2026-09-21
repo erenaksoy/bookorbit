@@ -14,6 +14,10 @@ vi.mock('./pdf-xmp-reader', () => ({
   parseXmp: vi.fn(),
 }));
 
+vi.mock('./pdf-isbn-scan', () => ({
+  scanPdfForIsbn: vi.fn(),
+}));
+
 vi.mock('./pdf-cover', () => ({
   extractPdfCover: vi.fn(),
 }));
@@ -30,7 +34,9 @@ import { readFile, stat } from 'fs/promises';
 import type { MockedFunction } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 
+import { ISBN_10, ISBN_13, ISBN_13_OTHER } from '../../../common/test-utils/isbn-fixtures';
 import { extractPdfCover } from './pdf-cover';
+import { scanPdfForIsbn } from './pdf-isbn-scan';
 import { extractPopplerPdfMetadata } from './pdf-poppler-metadata';
 import { parsePdfFile, PDF_BUFFER_WARNING_BYTES, type PdfParsed } from './pdf-parser';
 import { parsePdfFileInWorker } from './pdf-parse-worker-runner';
@@ -41,6 +47,7 @@ const mockStat = stat as MockedFunction<typeof stat>;
 const mockPdfLoad = PDFDocument.load as MockedFunction<typeof PDFDocument.load>;
 const mockExtractXmpXml = extractXmpXml as MockedFunction<typeof extractXmpXml>;
 const mockParseXmp = parseXmp as MockedFunction<typeof parseXmp>;
+const mockScanPdfForIsbn = scanPdfForIsbn as MockedFunction<typeof scanPdfForIsbn>;
 const mockExtractPdfCover = extractPdfCover as MockedFunction<typeof extractPdfCover>;
 const mockExtractPopplerPdfMetadata = extractPopplerPdfMetadata as MockedFunction<typeof extractPopplerPdfMetadata>;
 const mockParsePdfFileInWorker = parsePdfFileInWorker as MockedFunction<typeof parsePdfFileInWorker>;
@@ -102,6 +109,7 @@ describe('parsePdfFile', () => {
     mockParseXmp.mockReturnValue(null);
     mockExtractPdfCover.mockResolvedValue(Buffer.from([0xff, 0xd8, 0xff]));
     mockExtractPopplerPdfMetadata.mockResolvedValue(null);
+    mockScanPdfForIsbn.mockResolvedValue({ isbn10: null, isbn13: null });
     mockParsePdfFileInWorker.mockResolvedValue({ parsed: makeParsed(), warnings: [] });
   });
 
@@ -164,6 +172,41 @@ describe('parsePdfFile', () => {
         coverBuffer: null,
       }),
     );
+  });
+
+  describe('ISBN fallback from page text', () => {
+    it('reads the page text for an ISBN when the metadata has none, and uses the PDF page count', async () => {
+      mockScanPdfForIsbn.mockResolvedValue({ isbn10: null, isbn13: ISBN_13 });
+
+      const parsed = await parsePdfFile('/books/scanned.pdf');
+
+      expect(mockScanPdfForIsbn).toHaveBeenCalledWith('/books/scanned.pdf', expect.any(Number));
+      expect(parsed).toEqual(expect.objectContaining({ isbn13: ISBN_13, isbn10: null }));
+    });
+
+    it('keeps an ISBN 10 recovered from the text', async () => {
+      mockScanPdfForIsbn.mockResolvedValue({ isbn10: ISBN_10, isbn13: null });
+
+      const parsed = await parsePdfFile('/books/scanned.pdf');
+
+      expect(parsed).toEqual(expect.objectContaining({ isbn10: ISBN_10, isbn13: null }));
+    });
+
+    it('does not read the text when the metadata already carries an ISBN', async () => {
+      mockExtractXmpXml.mockReturnValue('<x:xmpmeta/>');
+      mockParseXmp.mockReturnValue({ title: 'T', authors: [], isbn13: ISBN_13_OTHER, genres: [], tags: [] } as never);
+
+      const parsed = await parsePdfFile('/books/tagged.pdf');
+
+      expect(mockScanPdfForIsbn).not.toHaveBeenCalled();
+      expect(parsed).toEqual(expect.objectContaining({ isbn13: ISBN_13_OTHER }));
+    });
+
+    it('leaves the ISBN empty when the text has none', async () => {
+      const parsed = await parsePdfFile('/books/plain.pdf');
+
+      expect(parsed).toEqual(expect.objectContaining({ isbn10: null, isbn13: null }));
+    });
   });
 
   it('uses Poppler XMP metadata for encrypted PDFs instead of encrypted pdf-lib strings', async () => {

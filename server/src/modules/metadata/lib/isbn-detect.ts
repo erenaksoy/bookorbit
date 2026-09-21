@@ -72,3 +72,15 @@ export function pickBestIsbn(hits: IsbnHit[]): { isbn10: string | null; isbn13: 
   if (best10) return { isbn10: best10.value, isbn13: null };
   return { isbn10: null, isbn13: null };
 }
+
+const NO_ISBN = { isbn10: null, isbn13: null };
+
+/**
+ * The ISBN a piece of running text states about its own book, for the formats whose metadata carries
+ * none. Precision over recall: a number is taken only when an "ISBN" label sits just before it, since a
+ * barcode, a price or a catalogue number can be checksum-valid by chance.
+ */
+export function findLabeledIsbn(text: string): { isbn10: string | null; isbn13: string | null } {
+  const hits = findIsbnInText(text);
+  return hits.some((hit) => hit.labeled) ? pickBestIsbn(hits) : NO_ISBN;
+}
