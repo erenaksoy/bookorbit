@@ -1,4 +1,4 @@
-import type { ProviderConfigurations } from '@bookorbit/types'
+import type { PluginProviderKey, ProviderConfigurations } from '@bookorbit/types'
 export { AMAZON_DOMAINS } from '@/lib/amazon-domain'
 
 /**
@@ -28,8 +28,11 @@ export interface ProviderEnableRequirement {
   missingTestMessage?: string
 }
 
+/** The providers that have a slot in the config document. A plugin's switch is kept elsewhere. */
+export type BuiltInProviderKey = Exclude<keyof ProviderConfigurations, PluginProviderKey>
+
 export interface ProviderRowDef {
-  key: keyof ProviderConfigurations
+  key: BuiltInProviderKey
   label: string
   group: ProviderGroupId
   hint?: string
@@ -70,4 +73,12 @@ export interface ProviderChipView {
   label: string
   /** Spelled-out state for the tooltip and assistive tech when the label is a bare duration. */
   title?: string
+}
+
+/**
+ * The provider config document keeps one slot per built-in provider. A plugin's on/off switch lives
+ * with the plugin manager, so it must not travel back in a save: the server refuses unknown keys.
+ */
+export function withoutPluginProviders(config: ProviderConfigurations): Partial<ProviderConfigurations> {
+  return Object.fromEntries(Object.entries(config).filter(([key]) => !key.startsWith('plugin:'))) as Partial<ProviderConfigurations>
 }

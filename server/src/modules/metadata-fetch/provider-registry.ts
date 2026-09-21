@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConcreteBookMediaKind, MetadataProviderKey } from '@bookorbit/types';
 
+import { MetadataProviderPluginRegistry } from '../metadata-provider-plugin/metadata-provider-plugin.registry';
 import { METADATA_PROVIDERS } from './constants';
 import { MetadataProvider } from './providers/metadata-provider';
 
@@ -8,25 +9,28 @@ import { MetadataProvider } from './providers/metadata-provider';
 export class ProviderRegistry {
   constructor(
     @Inject(METADATA_PROVIDERS)
-    private readonly providers: MetadataProvider[],
+    private readonly builtIn: MetadataProvider[],
+    private readonly plugins: MetadataProviderPluginRegistry,
   ) {}
 
+  /** Built-in providers first, then whatever plugins are installed right now. */
   all(): MetadataProvider[] {
-    return this.providers;
+    return [...this.builtIn, ...this.plugins.providers()];
   }
 
   select(keys?: MetadataProviderKey[]): MetadataProvider[] {
-    if (keys === undefined) return this.providers;
+    const providers = this.all();
+    if (keys === undefined) return providers;
     if (keys.length === 0) return [];
-    const known = new Set(this.providers.map((p) => p.key));
+    const known = new Set(providers.map((p) => p.key));
     const unknown = keys.filter((k) => !known.has(k));
     if (unknown.length) throw new BadRequestException(`Unknown providers: ${unknown.join(', ')}`);
     const requested = new Set(keys);
-    return this.providers.filter((p) => requested.has(p.key));
+    return providers.filter((p) => requested.has(p.key));
   }
 
   find(key: MetadataProviderKey): MetadataProvider | undefined {
-    return this.providers.find((p) => p.key === key);
+    return this.builtIn.find((p) => p.key === key) ?? this.plugins.find(key);
   }
 
   /**

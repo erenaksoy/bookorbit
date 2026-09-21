@@ -107,6 +107,11 @@ export enum AuditAction {
   RequestIndexerPluginInstall = "request_indexer.plugin.install",
   RequestIndexerPluginRemove = "request_indexer.plugin.remove",
 
+  MetadataProviderPluginInspect = "metadata_provider_plugin.inspect",
+  MetadataProviderPluginInstall = "metadata_provider_plugin.install",
+  MetadataProviderPluginEnable = "metadata_provider_plugin.enable",
+  MetadataProviderPluginRemove = "metadata_provider_plugin.remove",
+
   AuthorUpdate = "author.update",
   AuthorDelete = "author.delete",
   AuthorMerge = "author.merge",
@@ -167,6 +172,7 @@ export enum AuditResource {
   BookRequest = "book_request",
   DownloadClient = "download_client",
   RequestIndexer = "request_indexer",
+  MetadataProviderPlugin = "metadata_provider_plugin",
   Author = "author",
   AppSettings = "app_settings",
   Genre = "genre",

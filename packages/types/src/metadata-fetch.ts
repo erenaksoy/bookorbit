@@ -45,7 +45,23 @@ export interface ComicMetadataFields {
   storyArcs?: string[];
 }
 
-export type MetadataProviderKey = (typeof MetadataProviderKey)[keyof typeof MetadataProviderKey];
+export type BuiltInMetadataProviderKey = (typeof MetadataProviderKey)[keyof typeof MetadataProviderKey];
+
+export const PLUGIN_PROVIDER_KEY_PREFIX = "plugin:";
+export type PluginProviderKey = `plugin:${string}`;
+
+/** Lowercase slug that names a plugin on disk and, prefixed, keys its provider. */
+export const PLUGIN_PROVIDER_TYPE_PATTERN = /^[a-z0-9][a-z0-9-]{0,29}$/;
+
+export function isPluginProviderKey(value: string): value is PluginProviderKey {
+  return value.startsWith(PLUGIN_PROVIDER_KEY_PREFIX) && PLUGIN_PROVIDER_TYPE_PATTERN.test(value.slice(PLUGIN_PROVIDER_KEY_PREFIX.length));
+}
+
+export function pluginProviderKey(type: string): PluginProviderKey {
+  return `${PLUGIN_PROVIDER_KEY_PREFIX}${type}`;
+}
+
+export type MetadataProviderKey = BuiltInMetadataProviderKey | PluginProviderKey;
 
 export interface MetadataSeriesMembership {
   seriesName: string;

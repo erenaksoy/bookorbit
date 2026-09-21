@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { api } from '@/lib/api'
+import { registerPluginProviderLabels } from '@/lib/provider-colors'
 import { MetadataProviderKey } from '@bookorbit/types'
 import type { ProviderConfigurations, ProviderConnectionTestResult, ProviderStatus } from '@bookorbit/types'
 import { stripBearerPrefix } from '../lib/provider-token'
@@ -43,6 +44,7 @@ export function useProviderConfig() {
       const data: { config: ProviderConfigurations; statuses: ProviderStatus[] } = await res.json()
       config.value = data.config
       statuses.value = data.statuses
+      registerPluginProviderLabels(data.statuses)
     } finally {
       loading.value = false
     }

@@ -1,7 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
-  IsEnum,
   IsIn,
   IsInt,
   Min,
@@ -15,7 +14,9 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-import { CONCRETE_BOOK_MEDIA_KINDS, MetadataProviderKey } from '@bookorbit/types';
+import { CONCRETE_BOOK_MEDIA_KINDS } from '@bookorbit/types';
+import type { MetadataProviderKey } from '@bookorbit/types';
+import { IsMetadataProviderKey } from '../../../common/utils/metadata-provider-key.utils';
 import type { ConcreteBookMediaKind } from '@bookorbit/types';
 
 @ValidatorConstraint({ name: 'atLeastOneSearchTerm', async: false })
@@ -104,6 +105,6 @@ export class MetadataSearchDto {
 
     return undefined;
   })
-  @IsEnum(MetadataProviderKey, { each: true })
+  @IsMetadataProviderKey({ each: true })
   providers?: MetadataProviderKey[];
 }

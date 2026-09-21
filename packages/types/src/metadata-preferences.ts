@@ -144,6 +144,8 @@ export interface ProviderConfigurations {
   kobo: KoboProviderConfig;
   lubimyczytac: SimpleProviderConfig;
   aladin: AladinProviderConfig;
+  /** Plugin providers only carry an on/off switch, kept by the plugin manager. */
+  [pluginKey: `plugin:${string}`]: SimpleProviderConfig;
 }
 
 export interface ProviderStatus {

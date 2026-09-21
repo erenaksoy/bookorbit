@@ -1969,6 +1969,44 @@
           "libraryReset": "Library reset to the global rules",
           "resetFailed": "Could not reset metadata preferences. Check your connection and try again."
         }
+      },
+      "plugins": {
+        "title": "Provider plugins",
+        "hint": "A plugin adds a metadata source that BookOrbit does not ship, such as a regional bookstore. Install one as a .zip archive containing index.mjs, or as a single .mjs file. A new plugin starts switched off.",
+        "install": "Install plugin",
+        "loading": "Loading plugins",
+        "loadFailed": "Could not load the installed plugins.",
+        "failuresLabel": "Plugins that failed to load",
+        "failedToLoad": "failed to load: {reason}",
+        "none": "No provider plugins are installed.",
+        "media": "Media: {kinds}",
+        "toggle": "Use {label} for metadata",
+        "remove": "Remove {label}",
+        "enableHint": "An enabled plugin only contributes once you add it to a field rule in Field Rules.",
+        "confirmRemove": "Remove {label}?",
+        "removeWarning": "The plugin is uninstalled and switched off. Ids it saved on your books are kept, so installing it again picks them up.",
+        "removeAction": "Remove plugin",
+        "removed": "{label} removed",
+        "removeFailed": "Could not remove the plugin.",
+        "toggleFailed": "Could not change the plugin.",
+        "inspectFailed": "That file could not be read as a plugin.",
+        "installFailed": "The plugin could not be installed.",
+        "installed": "{label} installed",
+        "reviewTitle": "Review plugin",
+        "replaceTitle": "Replace plugin",
+        "reviewDescription": "Read what this plugin declares and its source before installing it.",
+        "declares": "What it declares",
+        "name": "Name",
+        "key": "Provider key",
+        "version": "Version",
+        "versionUnknown": "Not stated",
+        "mediaLabel": "Media",
+        "files": "Files",
+        "source": "Source",
+        "trustWarning": "A plugin runs inside the BookOrbit server with full access to it, including the database and your library. Only install plugins from an author you trust, and read the source below first.",
+        "replaces": "A plugin called {type} is already installed. This replaces it and keeps its on/off setting.",
+        "confirmInstall": "Install and run",
+        "replace": "Replace"
       }
     },
     "reader": {
@@ -4323,7 +4361,8 @@
       "Series": "Series",
       "OidcIdentity": "OIDC identity",
       "MagicLinkToken": "Magic link",
-      "ReadingInsightsProfile": "Reading insights profile"
+      "ReadingInsightsProfile": "Reading insights profile",
+      "MetadataProviderPlugin": "Metadata provider plugin"
     },
     "actionLabels": {
       "AuthRegister": "Register account",
@@ -4457,7 +4496,11 @@
       "EmailRecipientGroupMemberRemove": "Remove recipient from group",
       "MaintenanceMissingBooksClean": "Cleaned missing books",
       "MaintenanceBrokenCoversClean": "Cleaned broken covers",
-      "MaintenanceOrphanedCoversClean": "Cleaned orphaned cover folders"
+      "MaintenanceOrphanedCoversClean": "Cleaned orphaned cover folders",
+      "MetadataProviderPluginInspect": "Metadata provider plugin inspected",
+      "MetadataProviderPluginInstall": "Metadata provider plugin installed",
+      "MetadataProviderPluginEnable": "Metadata provider plugin switched",
+      "MetadataProviderPluginRemove": "Metadata provider plugin removed"
     }
   },
   "auth": {

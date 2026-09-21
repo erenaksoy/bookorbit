@@ -1,4 +1,5 @@
-import type { MetadataProviderKey } from '@bookorbit/types'
+import { reactive } from 'vue'
+import { isPluginProviderKey, type MetadataProviderKey } from '@bookorbit/types'
 
 const PROVIDER_HEX: Record<string, string> = {
   google: '#34A853',
@@ -20,7 +21,7 @@ const PROVIDER_HEX: Record<string, string> = {
 
 const DEFAULT_COLOR = 'oklch(0.5 0.01 0)'
 
-export const PROVIDER_SHORT_LABELS: Record<string, string> = {
+export const PROVIDER_SHORT_LABELS = reactive<Record<string, string>>({
   google: 'Google',
   amazon: 'Amazon',
   goodreads: 'Goodreads',
@@ -36,6 +37,13 @@ export const PROVIDER_SHORT_LABELS: Record<string, string> = {
   lubimyczytac: 'LubimyCzytac',
   aladin: 'Aladin',
   auto: 'Fetched',
+})
+
+/** A plugin can be installed at any time, so its name is learned from the server rather than compiled in. */
+export function registerPluginProviderLabels(providers: readonly { key: string; label: string }[]): void {
+  for (const provider of providers) {
+    if (isPluginProviderKey(provider.key)) PROVIDER_SHORT_LABELS[provider.key] = provider.label
+  }
 }
 
 export function getProviderColor(provider: string): string {

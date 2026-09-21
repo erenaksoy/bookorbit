@@ -81,3 +81,4 @@ export * from "./cron";
 export * from "./tts";
 export * from "./watch-download";
 export * from "./podcast";
+export * from "./metadata-provider-plugin";

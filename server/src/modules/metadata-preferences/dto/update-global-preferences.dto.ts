@@ -16,16 +16,9 @@ import {
   validateSync,
 } from 'class-validator';
 import { plainToInstance, Type } from 'class-transformer';
-import {
-  ALL_METADATA_FIELDS,
-  GENRE_MERGE_MODES,
-  GENRE_MERGE_STRATEGIES,
-  MAX_METADATA_GENRE_COUNT,
-  MetadataProviderKey,
-  PROVIDER_ID_FETCH_MODES,
-} from '@bookorbit/types';
-import type { GenreMergeMode, MetadataField, MetadataMergeStrategy, ProviderIdFetchMode } from '@bookorbit/types';
-const PROVIDER_KEYS = Object.values(MetadataProviderKey);
+import { ALL_METADATA_FIELDS, GENRE_MERGE_MODES, GENRE_MERGE_STRATEGIES, MAX_METADATA_GENRE_COUNT, PROVIDER_ID_FETCH_MODES } from '@bookorbit/types';
+import { IsMetadataProviderKey } from '../../../common/utils/metadata-provider-key.utils';
+import type { GenreMergeMode, MetadataField, MetadataProviderKey, MetadataMergeStrategy, ProviderIdFetchMode } from '@bookorbit/types';
 
 export class FieldPreferenceDto {
   @IsBoolean()
@@ -33,7 +26,7 @@ export class FieldPreferenceDto {
 
   @IsArray()
   @IsString({ each: true })
-  @IsIn(PROVIDER_KEYS, { each: true })
+  @IsMetadataProviderKey({ each: true })
   providers!: MetadataProviderKey[];
 
   @IsIn(GENRE_MERGE_STRATEGIES)
