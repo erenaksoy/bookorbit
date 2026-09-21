@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises';
 
 import { htmlToPlainText } from '../../../common/utils/html-to-text.utils';
+import { scanMobiTextForIsbn } from './mobi-isbn-scan';
 
 // ── PalmDB / MOBI binary offsets ──────────────────────────────────────────────
 //
@@ -50,6 +51,8 @@ interface MobiParsed {
   publisher: string | null;
   description: string | null;
   isbn: string | null;
+  /** An ISBN read from the book text, set only when the EXTH header has none. */
+  contentIsbn?: { isbn10: string | null; isbn13: string | null };
   tags: string[];
   publishedDate: string | null;
   language: string | null;
@@ -170,7 +173,9 @@ export function parseMobiBuffer(buf: Buffer): MobiParsed {
 export async function parseMobiFile(absolutePath: string): Promise<MobiParsed | null> {
   try {
     const buf = await readFile(absolutePath);
-    return parseMobiBuffer(buf);
+    const parsed = parseMobiBuffer(buf);
+    if (!parsed.isbn) parsed.contentIsbn = scanMobiTextForIsbn(buf, parsed.recordOffsets);
+    return parsed;
   } catch {
     return null;
   }
